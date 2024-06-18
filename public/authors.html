@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Authors</title>
+    <link href="style.css" rel="stylesheet" type="text/css" />
+    <script language="JavaScript">
+        function showform(dowhat) {
+            if (dowhat == 'insert') {
+                document.getElementById('browse').style.display = 'none';
+                document.getElementById('insert').style.display = 'block';
+                document.getElementById('update').style.display = 'none';
+                document.getElementById('delete').style.display = 'none';
+            } else if (dowhat == 'update') {
+                document.getElementById('browse').style.display = 'none';
+                document.getElementById('insert').style.display = 'none';
+                document.getElementById('update').style.display = 'block';
+                document.getElementById('delete').style.display = 'none';
+            } else if (dowhat == 'delete') {
+                document.getElementById('browse').style.display = 'none';
+                document.getElementById('insert').style.display = 'none';
+                document.getElementById('update').style.display = 'none';
+                document.getElementById('delete').style.display = 'block';
+            } else if (dowhat == 'all') {
+                document.getElementById('browse').style.display = 'block';
+                document.getElementById('insert').style.display = 'block';
+                document.getElementById('update').style.display = 'block';
+                document.getElementById('delete').style.display = 'block';
+            } else {
+                document.getElementById('browse').style.display = 'block';
+                document.getElementById('insert').style.display = 'none';
+                document.getElementById('update').style.display = 'none';
+                document.getElementById('delete').style.display = 'none';
+            }
+        }
+
+        function newAuthor() { showform('insert'); }
+        function updateAuthor(aid) { showform('update'); document.getElementById('authorID').value = aid; }
+        function deleteAuthor(aid) { showform('delete'); document.getElementById('deleteauthorID').value = aid; }
+        function browseAuthors() { showform('browse'); }
+        function showAll() { showform('all'); }
+
+        function fetchAuthors() {
+            fetch('/authors')
+                .then(response => response.json())
+                .then(authors => {
+                    const authorsTable = document.getElementById('authorsTable');
+                    authorsTable.innerHTML = ''; // Clear the table
+
+                    authors.forEach(author => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><a href="#" onClick="updateAuthor(${author.authorID})">Edit</a></td>
+                            <td><a href="#" onClick="deleteAuthor(${author.authorID})">Delete</a></td>
+                            <td align="right">${author.authorID}</td>
+                            <td>${author.firstName}</td>
+                            <td>${author.lastName}</td>
+                            <td>${author.bio}</td>
+                        `;
+                        authorsTable.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error fetching authors:', error));
+        }
+
+        function addAuthor(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            fetch('/authors', {
+                method: 'POST',
+                body: new URLSearchParams(formData)
+            })
+                .then(response => response.text())
+                .then(message => {
+                    alert(message);
+                    fetchAuthors();
+                    browseAuthors();
+                })
+                .catch(error => console.error('Error adding author:', error));
+        }
+
+        function saveUpdate(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const authorID = formData.get('authorID');
+
+            fetch(`/authors/${authorID}`, {
+                method: 'PUT',
+                body: new URLSearchParams(formData)
+            })
+                .then(response => response.text())
+                .then(message => {
+                    alert(message);
+                    fetchAuthors();
+                    browseAuthors();
+                })
+                .catch(error => console.error('Error updating author:', error));
+        }
+
+        function confirmDelete(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const authorID = formData.get('authorID');
+
+            fetch(`/authors/${authorID}`, {
+                method: 'DELETE'
+            })
+                .then(response => response.text())
+                .then(message => {
+                    alert(message);
+                    fetchAuthors();
+                    browseAuthors();
+                })
+                .catch(error => console.error('Error deleting author:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchAuthors);
+    </script>
+</head>
+
+<body onload="browseAuthors()">
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="customers.html">Customers</a>
+        <a href="authors.html">Authors</a>
+        <a href="books.html">Books</a>
+        <a href="orders.html">Orders</a>
+    </nav>
+    <h1>Authors</h1>
+
+    <div id="browse">
+        <p><a href="#" onClick="showAll()" class="form-button">Display all forms</a></p>
+        <table border="1" cellpadding="5">
+            <thead>
+                <tr>
+                    <th><a href="#" onClick="newAuthor()">New</a></th>
+                    <th></th>
+                    <th>Author ID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Bio</th>
+                </tr>
+            </thead>
+            <tbody id="authorsTable">
+                <!-- Authors will be dynamically added here -->
+            </tbody>
+        </table>
+    </div> <!-- browse -->
+
+    <div id="insert">
+        <form method="POST" id="addAuthor" onsubmit="addAuthor(event)">
+            <legend><strong>Add Author</strong></legend>
+            <fieldset class="fields">
+                <label>First Name: </label> <input type="text" name="firstName">
+                <label>Last Name: </label> <input type="text" name="lastName">
+                <label>Bio: </label> <textarea name="bio" rows="4" cols="50"></textarea>
+            </fieldset>
+            <input class="btn" type="submit" value="Add Author">
+            <input class="btn" type="button" value="Cancel" onClick="browseAuthors()">
+        </form>
+    </div><!-- insert -->
+
+    <div id="update">
+        <form method="POST" id="updateAuthor" onsubmit="saveUpdate(event)">
+            <legend><strong>Update Author</strong></legend>
+            <fieldset class="fields">
+                <input type="hidden" name="authorID" id="authorID" value="">
+                <label>ID: </label> <span id="updateAuthorID"></span>
+                <label>First Name: </label> <input type="text" name="firstName" id="updateFirstName" value="">
+                <label>Last Name: </label> <input type="text" name="lastName" id="updateLastName" value="">
+                <label>Bio: </label> <textarea name="bio" rows="4" cols="50" id="updateBio"></textarea>
+            </fieldset>
+            <input class="btn" type="submit" value="Save Update">
+            <input class="btn" type="button" value="Cancel" onClick="browseAuthors()">
+        </form>
+    </div><!-- update -->
+
+    <div id="delete">
+        <form method="POST" id="deleteAuthor" onsubmit="confirmDelete(event)">
+            <legend><strong>Delete Author</strong></legend>
+            <fieldset class="fields">
+                <p>Are you sure you wish to delete the following?</p>
+                <input type="hidden" name="authorID" id="deleteauthorID" value="">
+                <label><strong>ID:</strong></label> <span id="deleteAuthorID"></span>
+                <label><strong>Name:</strong> </label> <span id="deleteName"></span>
+                <label><strong>Bio:</strong> </label> <span id="deleteBio"></span>
+            </fieldset>
+            <input class="btn" type="submit" value="Delete Author">
+            <input class="btn" type="button" value="Cancel" onClick="browseAuthors()">
+        </form>
+    </div><!-- delete -->
+
+</body>
+
+</html>

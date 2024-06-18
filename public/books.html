@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Books</title>
+    <link href="style.css" rel="stylesheet" type="text/css" />
+    <script language="JavaScript">
+        function showform(dowhat) {
+            if (dowhat == 'insert') {
+                document.getElementById('browse').style.display = 'none';
+                document.getElementById('insert').style.display = 'block';
+                document.getElementById('update').style.display = 'none';
+                document.getElementById('delete').style.display = 'none';
+            }
+            else if (dowhat == 'update') {
+                document.getElementById('browse').style.display = 'none';
+                document.getElementById('insert').style.display = 'none';
+                document.getElementById('update').style.display = 'block';
+                document.getElementById('delete').style.display = 'none';
+            }
+            else if (dowhat == 'delete') {
+                document.getElementById('browse').style.display = 'none';
+                document.getElementById('insert').style.display = 'none';
+                document.getElementById('update').style.display = 'none';
+                document.getElementById('delete').style.display = 'block';
+            }
+            else if (dowhat == 'all') {
+                document.getElementById('browse').style.display = 'block';
+                document.getElementById('insert').style.display = 'block';
+                document.getElementById('update').style.display = 'block';
+                document.getElementById('delete').style.display = 'block';
+            }
+            else { //by default display browse
+                document.getElementById('browse').style.display = 'block';
+                document.getElementById('insert').style.display = 'none';
+                document.getElementById('update').style.display = 'none';
+                document.getElementById('delete').style.display = 'none';
+            }
+        }
+
+        function newBook() { showform('insert'); }
+        function updateBook(bid) { showform('update'); document.getElementById('bookID').value = bid; }
+        function deleteBook(bid) { showform('delete'); document.getElementById('deletebookID').value = bid; }
+        function browseBooks() { showform('browse'); }
+        function showAll() { showform('all'); }
+
+        function fetchBooks() {
+            fetch('/books')
+                .then(response => response.json())
+                .then(books => {
+                    const booksTable = document.getElementById('booksTable');
+                    booksTable.innerHTML = ''; // Clear the table
+
+                    books.forEach(book => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><a href="#" onClick="updateBook(${book.bookID})">Edit</a></td>
+                            <td><a href="#" onClick="deleteBook(${book.bookID})">Delete</a></td>
+                            <td align="right">${book.bookID}</td>
+                            <td>${book.title}</td>
+                            <td>${book.price}</td>
+                            <td>${book.publicationYear}</td>
+                            <td>${book.stockQuantity}</td>
+                        `;
+                        booksTable.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error fetching books:', error));
+        }
+
+        function addBook(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            fetch('/books', {
+                method: 'POST',
+                body: new URLSearchParams(formData)
+            })
+            .then(response => response.text())
+            .then(message => {
+                alert(message);
+                fetchBooks();
+                browseBooks();
+            })
+            .catch(error => console.error('Error adding book:', error));
+        }
+
+        function saveUpdate(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const bookID = formData.get('bookID');
+
+            fetch(`/books/${bookID}`, {
+                method: 'PUT',
+                body: new URLSearchParams(formData)
+            })
+            .then(response => response.text())
+            .then(message => {
+                alert(message);
+                fetchBooks();
+                browseBooks();
+            })
+            .catch(error => console.error('Error updating book:', error));
+        }
+
+        function confirmDelete(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const bookID = formData.get('bookID');
+
+            fetch(`/books/${bookID}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.text())
+            .then(message => {
+                alert(message);
+                fetchBooks();
+                browseBooks();
+            })
+            .catch(error => console.error('Error deleting book:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchBooks);
+    </script>
+</head>
+
+<body onload="browseBooks()">
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="customers.html">Customers</a>
+        <a href="authors.html">Authors</a>
+        <a href="books.html">Books</a>
+        <a href="orders.html">Orders</a>
+    </nav>
+    <h1>Books</h1>
+
+    <div id="browse">
+        <p><a href="#" onClick="showAll()" class="form-button">Display all forms</a></p>
+        <table border="1" cellpadding="5">
+            <thead>
+                <tr>
+                    <th><a href="#" onClick="newBook()">New</a></th>
+                    <th></th>
+                    <th>Book ID</th>
+                    <th>Title</th>
+                    <th>Price</th>
+                    <th>Publication Year</th>
+                    <th>Stock Quantity</th>
+                </tr>
+            </thead>
+            <tbody id="booksTable">
+                <!-- Books will be dynamically added here -->
+            </tbody>
+        </table>
+    </div> <!-- browse -->
+    
+    <div id="insert">
+        <form method="POST" id="addBook" onsubmit="addBook(event)">
+            <legend><strong>Add Book</strong></legend>
+            <fieldset class="fields">
+                <label>Title: </label> <input type="text" name="title">
+                <label>Publication Year: </label> <input type="text" name="publicationYear">
+                <label>Price: </label> <input type="text" name="price">
+                <label>Stock Quantity: </label> <input type="text" name="stockQuantity">
+                <label>Author: </label>
+                <select name="authorID">
+                    <option value="1">John Steinbeck</option>
+                    <option value="2">J.K. Rowling</option>
+                    <option value="3">Edward Abbey</option>
+                </select>
+            </fieldset>
+            <input class="btn" type="submit" value="Add Book">
+            <input class="btn" type="button" value="Cancel" onClick="browseBooks()">
+        </form>
+    </div><!-- insert -->
+
+    <div id="update">
+        <form method="POST" id="updateBook" onsubmit="saveUpdate(event)">
+            <legend><strong>Update Book</strong></legend>
+            <fieldset class="fields">
+                <input type="hidden" name="bookID" id="bookID" value="">
+                <label>ID: </label> <span id="updateBookID"></span>
+                <label>Title: </label> <input type="text" name="title" id="updateTitle" value="">
+                <label>Publication Year: </label> <input type="text" name="publicationYear" id="updatePublicationYear" value="">
+                <label>Price: </label> <input type="text" name="price" id="updatePrice" value="">
+                <label>Stock Quantity: </label> <input type="text" name="stockQuantity" id="updateStockQuantity" value="">
+                <label>Author: </label>
+                <select name="authorID" id="updateAuthorID">
+                    <option value="1">John Steinbeck</option>
+                    <option value="2">J.K. Rowling</option>
+                    <option value="3">Edward Abbey</option>
+                </select>
+            </fieldset>
+            <input class="btn" type="submit" value="Save Update">
+            <input class="btn" type="button" value="Cancel" onClick="browseBooks()">
+        </form>
+    </div><!-- update -->
+
+    <div id="delete">
+        <form method="POST" id="deleteBook" onsubmit="confirmDelete(event)">
+            <legend><strong>Delete Book</strong></legend>
+            <fieldset class="fields">
+                <p>Are you sure you wish to delete the following?</p>
+                <input type="hidden" name="bookID" id="deletebookID" value="">
+                <label><strong>ID:</strong></label> <span id="deleteBookID"></span>
+                <label><strong>Title:</strong> </label> <span id="deleteTitle"></span>
+                <label><strong>Publication Year:</strong> </label> <span id="deletePublicationYear"></span>
+                <label><strong>Stock Quantity:</strong> </label> <span id="deleteStockQuantity"></span>
+                <label><strong>Author:</strong> </label> <span id="deleteAuthor"></span>
+            </fieldset>
+            <input class="btn" type="submit" value="Delete Book">
+            <input class="btn" type="button" value="Cancel" onClick="browseBooks()">
+        </form>
+    </div><!-- delete -->
+
+</body>
+</html>

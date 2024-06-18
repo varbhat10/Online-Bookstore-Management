@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Customers</title>
+    <link href="style.css" rel="stylesheet" type="text/css" />
+    <script language="JavaScript">
+        function showform(dowhat) {
+            if (dowhat == 'insert') {
+                document.getElementById('browse').style.display = 'none';
+                document.getElementById('insert').style.display = 'block';
+                document.getElementById('update').style.display = 'none';
+                document.getElementById('delete').style.display = 'none';
+            } else if (dowhat == 'update') {
+                document.getElementById('browse').style.display = 'none';
+                document.getElementById('insert').style.display = 'none';
+                document.getElementById('update').style.display = 'block';
+                document.getElementById('delete').style.display = 'none';
+            } else if (dowhat == 'delete') {
+                document.getElementById('browse').style.display = 'none';
+                document.getElementById('insert').style.display = 'none';
+                document.getElementById('update').style.display = 'none';
+                document.getElementById('delete').style.display = 'block';
+            } else if (dowhat == 'all') {
+                document.getElementById('browse').style.display = 'block';
+                document.getElementById('insert').style.display = 'block';
+                document.getElementById('update').style.display = 'block';
+                document.getElementById('delete').style.display = 'block';
+            } else {
+                document.getElementById('browse').style.display = 'block';
+                document.getElementById('insert').style.display = 'none';
+                document.getElementById('update').style.display = 'none';
+                document.getElementById('delete').style.display = 'none';
+            }
+        }
+
+        function newCustomer() { showform('insert'); }
+        function updateCustomer(cid) { showform('update'); document.getElementById('customerID').value = cid; }
+        function deleteCustomer(cid) { showform('delete'); document.getElementById('deletecustomerID').value = cid; }
+        function browseCustomers() { showform('browse'); }
+        function showAll() { showform('all'); }
+
+        function fetchCustomers() {
+            fetch('/customers')
+                .then(response => response.json())
+                .then(customers => {
+                    const customersTable = document.getElementById('customersTable');
+                    customersTable.innerHTML = ''; // Clear the table
+
+                    customers.forEach(customer => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><a href="#" onClick="updateCustomer(${customer.customerID})">Edit</a></td>
+                            <td><a href="#" onClick="deleteCustomer(${customer.customerID})">Delete</a></td>
+                            <td align="right">${customer.customerID}</td>
+                            <td>${customer.firstName}</td>
+                            <td>${customer.lastName}</td>
+                            <td>${customer.email}</td>
+                            <td>${customer.addressLine1}</td>
+                            <td>${customer.city}</td>
+                            <td>${customer.state}</td>
+                            <td>${customer.zipCode}</td>
+                        `;
+                        customersTable.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error fetching customers:', error));
+        }
+
+        function addCustomer(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            fetch('/customers', {
+                method: 'POST',
+                body: new URLSearchParams(formData)
+            })
+                .then(response => response.text())
+                .then(message => {
+                    alert(message);
+                    fetchCustomers();
+                    browseCustomers();
+                })
+                .catch(error => console.error('Error adding customer:', error));
+        }
+
+        function saveUpdate(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const customerID = formData.get('customerID');
+
+            fetch(`/customers/${customerID}`, {
+                method: 'PUT',
+                body: new URLSearchParams(formData)
+            })
+                .then(response => response.text())
+                .then(message => {
+                    alert(message);
+                    fetchCustomers();
+                    browseCustomers();
+                })
+                .catch(error => console.error('Error updating customer:', error));
+        }
+
+        function confirmDelete(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const customerID = formData.get('customerID');
+
+            fetch(`/customers/${customerID}`, {
+                method: 'DELETE'
+            })
+                .then(response => response.text())
+                .then(message => {
+                    alert(message);
+                    fetchCustomers();
+                    browseCustomers();
+                })
+                .catch(error => console.error('Error deleting customer:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchCustomers);
+    </script>
+</head>
+
+<body onload="browseCustomers()">
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="customers.html">Customers</a>
+        <a href="authors.html">Authors</a>
+        <a href="books.html">Books</a>
+        <a href="orders.html">Orders</a>
+    </nav>
+    <h1>Customers</h1>
+
+    <div id="browse">
+        <p><a href="#" onClick="showAll()" class="form-button">Display all forms</a></p>
+        <table border="1" cellpadding="5">
+            <thead>
+                <tr>
+                    <th><a href="#" onClick="newCustomer()">New</a></th>
+                    <th></th>
+                    <th>Customer ID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Email</th>
+                    <th>Address</th>
+                    <th>City</th>
+                    <th>State</th>
+                    <th>Zip Code</th>
+                </tr>
+            </thead>
+            <tbody id="customersTable">
+                <!-- Customers will be dynamically added here -->
+            </tbody>
+        </table>
+    </div> <!-- browse -->
+
+    <div id="insert">
+        <form method="POST" id="addCustomer" onsubmit="addCustomer(event)">
+            <legend><strong>Add Customer</strong></legend>
+            <fieldset class="fields">
+                <label>First Name: </label> <input type="text" name="firstName">
+                <label>Last Name: </label> <input type="text" name="lastName">
+                <label>Email: </label> <input type="text" name="email">
+                <label>Address Line 1: </label> <input type="text" name="addressLine1">
+                <label>Address Line 2: </label> <input type="text" name="addressLine2">
+                <label>City: </label> <input type="text" name="city">
+                <label>State: </label> <input type="text" name="state">
+                <label>Zip Code: </label> <input type="text" name="zipCode">
+            </fieldset>
+            <input class="btn" type="submit" value="Add Customer">
+            <input class="btn" type="button" value="Cancel" onClick="browseCustomers()">
+        </form>
+    </div><!-- insert -->
+
+    <div id="update">
+        <form method="POST" id="updateCustomer" onsubmit="saveUpdate(event)">
+            <legend><strong>Update Customer</strong></legend>
+            <fieldset class="fields">
+                <input type="hidden" name="customerID" id="customerID" value="">
+                <label>ID: </label> <span id="updateCustomerID"></span>
+                <label>First Name: </label> <input type="text" name="firstName" id="updateFirstName" value="">
+                <label>Last Name: </label> <input type="text" name="lastName" id="updateLastName" value="">
+                <label>Email: </label> <input type="text" name="email" id="updateEmail" value="">
+                <label>Address Line 1: </label> <input type="text" name="addressLine1" id="updateAddressLine1" value="">
+                <label>Address Line 2: </label> <input type="text" name="addressLine2" id="updateAddressLine2" value="">
+                <label>City: </label> <input type="text" name="city" id="updateCity" value="">
+                <label>State: </label> <input type="text" name="state" id="updateState" value="">
+                <label>Zip Code: </label> <input type="text" name="zipCode" id="updateZipCode" value="">
+            </fieldset>
+            <input class="btn" type="submit" value="Save Update">
+            <input class="btn" type="button" value="Cancel" onClick="browseCustomers()">
+        </form>
+    </div><!-- update -->
+
+    <div id="delete">
+        <form method="POST" id="deleteCustomer" onsubmit="confirmDelete(event)">
+            <legend><strong>Delete Customer</strong></legend>
+            <fieldset class="fields">
+                <p>Are you sure you wish to delete the following?</p>
+                <input type="hidden" name="customerID" id="deletecustomerID" value="">
+                <label><strong>ID:</strong></label> <span id="deleteCustomerID"></span>
+                <label><strong>Name:</strong> </label> <span id="deleteName"></span>
+                <label><strong>Email:</strong> </label> <span id="deleteEmail"></span>
+            </fieldset>
+            <input class="btn" type="submit" value="Delete Customer">
+            <input class="btn" type="button" value="Cancel" onClick="browseCustomers()">
+        </form>
+    </div><!-- delete -->
+
+</body>
+
+</html>

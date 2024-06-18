@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Orders</title>
+    <link href="style.css" rel="stylesheet" type="text/css" />
+    <script language="JavaScript">
+        function showform(dowhat) {
+            if (dowhat === 'insert') {
+                document.getElementById('browse').style.display = 'none';
+                document.getElementById('insert').style.display = 'block';
+                document.getElementById('update').style.display = 'none';
+                document.getElementById('delete').style.display = 'none';
+            } else if (dowhat === 'update') {
+                document.getElementById('browse').style.display = 'none';
+                document.getElementById('insert').style.display = 'none';
+                document.getElementById('update').style.display = 'block';
+                document.getElementById('delete').style.display = 'none';
+            } else if (dowhat === 'delete') {
+                document.getElementById('browse').style.display = 'none';
+                document.getElementById('insert').style.display = 'none';
+                document.getElementById('update').style.display = 'none';
+                document.getElementById('delete').style.display = 'block';
+            } else if (dowhat === 'all') {
+                document.getElementById('browse').style.display = 'block';
+                document.getElementById('insert').style.display = 'block';
+                document.getElementById('update').style.display = 'block';
+                document.getElementById('delete').style.display = 'block';
+            } else {
+                document.getElementById('browse').style.display = 'block';
+                document.getElementById('insert').style.display = 'none';
+                document.getElementById('update').style.display = 'none';
+                document.getElementById('delete').style.display = 'none';
+            }
+        }
+
+        function newOrder() { showform('insert'); }
+        function updateOrder(oid) { showform('update'); document.getElementById('orderID').value = oid; }
+        function deleteOrder(oid) { showform('delete'); document.getElementById('deleteOrderID').value = oid; }
+        function browseOrders() { showform('browse'); }
+        function showAll() { showform('all'); }
+
+        function fetchOrders() {
+            fetch('/orders')
+                .then(response => response.json())
+                .then(orders => {
+                    const ordersTable = document.getElementById('ordersTable');
+                    ordersTable.innerHTML = ''; // Clear the table
+
+                    orders.forEach(order => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><a href="#" onClick="updateOrder(${order.orderID})">Edit</a></td>
+                            <td><a href="#" onClick="deleteOrder(${order.orderID})">Delete</a></td>
+                            <td align="right">${order.orderID}</td>
+                            <td>${order.firstName} ${order.lastName}</td>
+                            <td>${new Date(order.orderDate).toISOString().slice(0, 10)}</td>
+                            <td>${order.status}</td>
+                            <td>${order.books}</td>
+                            <td>${order.totalPrice.toFixed(2)}</td>
+                        `;
+                        ordersTable.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error fetching orders:', error));
+        }
+
+        function addOrder(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            fetch('/orders', {
+                method: 'POST',
+                body: new URLSearchParams(formData)
+            })
+                .then(response => response.text())
+                .then(message => {
+                    alert(message);
+                    fetchOrders();
+                    browseOrders();
+                })
+                .catch(error => console.error('Error adding order:', error));
+        }
+
+        function saveUpdate(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const orderID = formData.get('orderID');
+
+            fetch(`/orders/${orderID}`, {
+                method: 'PUT',
+                body: new URLSearchParams(formData)
+            })
+                .then(response => response.text())
+                .then(message => {
+                    alert(message);
+                    fetchOrders();
+                    browseOrders();
+                })
+                .catch(error => console.error('Error updating order:', error));
+        }
+
+        function confirmDelete(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const orderID = formData.get('orderID');
+
+            fetch(`/orders/${orderID}`, {
+                method: 'DELETE'
+            })
+                .then(response => response.text())
+                .then(message => {
+                    alert(message);
+                    fetchOrders();
+                    browseOrders();
+                })
+                .catch(error => console.error('Error deleting order:', error));
+        }
+
+        function fetchCustomers() {
+            fetch('/customers')
+                .then(response => response.json())
+                .then(customers => {
+                    const customerSelects = document.querySelectorAll('select[name="customerID"]');
+                    customerSelects.forEach(select => {
+                        select.innerHTML = ''; // Clear existing options
+                        customers.forEach(customer => {
+                            const option = document.createElement('option');
+                            option.value = customer.customerID;
+                            option.textContent = `${customer.firstName} ${customer.lastName}`;
+                            select.appendChild(option);
+                        });
+                    });
+                })
+                .catch(error => console.error('Error fetching customers:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchOrders();
+            fetchCustomers();
+        });
+    </script>
+</head>
+
+<body onload="browseOrders()">
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="customers.html">Customers</a>
+        <a href="authors.html">Authors</a>
+        <a href="books.html">Books</a>
+        <a href="orders.html">Orders</a>
+    </nav>
+    <h1>Orders</h1>
+
+    <div id="browse">
+        <p><a href="#" onClick="showAll()" class="form-button">Display all forms</a></p>
+        <table border="1" cellpadding="5">
+            <thead>
+                <tr>
+                    <th><a href="#" onClick="newOrder()">New</a></th>
+                    <th></th>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Order Date</th>
+                    <th>Status</th>
+                    <th>Books</th>
+                    <th>Total Price</th>
+                </tr>
+            </thead>
+            <tbody id="ordersTable">
+                <!-- Orders will be dynamically added here -->
+            </tbody>
+        </table>
+    </div> <!-- browse -->
+
+    <div id="insert">
+        <form method="POST" id="addOrder" onsubmit="addOrder(event)">
+            <legend><strong>Add Order</strong></legend>
+            <fieldset class="fields">
+                <label>Customer: </label>
+                <select name="customerID" id="newCustomerID"></select>
+                <label>Order Date: </label> <input type="date" name="orderDate">
+                <label>Status: </label> <input type="text" name="status">
+                <label>Books: </label> <input type="text" name="books"> <!-- Use comma-separated book IDs -->
+                <label>Quantities: </label> <input type="text" name="quantities"> <!-- Use comma-separated quantities -->
+            </fieldset>
+            <input class="btn" type="submit" value="Add Order">
+            <input class="btn" type="button" value="Cancel" onClick="browseOrders()">
+        </form>
+    </div><!-- insert -->
+
+    <div id="update">
+        <form method="POST" id="updateOrder" onsubmit="saveUpdate(event)">
+            <legend><strong>Update Order</strong></legend>
+            <fieldset class="fields">
+                <input type="hidden" name="orderID" id="orderID" value="">
+                <label>Order ID: </label> <span id="updateOrderID"></span>
+                <label>Customer: </label> <select name="customerID" id="updateCustomerID"></select>
+                <label>Order Date: </label> <input type="date" name="orderDate" id="updateOrderDate">
+                <label>Status: </label> <input type="text" name="status" id="updateStatus">
+                <label>Books: </label> <input type="text" name="books" id="updateBooks"> <!-- Use comma-separated book IDs -->
+                <label>Quantities: </label> <input type="text" name="quantities" id="updateQuantities"> <!-- Use comma-separated quantities -->
+            </fieldset>
+            <input class="btn" type="submit" value="Save Update">
+            <input class="btn" type="button" value="Cancel" onClick="browseOrders()">
+        </form>
+    </div><!-- update -->
+
+    <div id="delete">
+        <form method="POST" id="deleteOrder" onsubmit="confirmDelete(event)">
+            <legend><strong>Delete Order</strong></legend>
+            <fieldset class="fields">
+                <p>Are you sure you wish to delete the following?</p>
+                <input type="hidden" name="orderID" id="deleteOrderID" value="">
+                <label><strong>Order ID:</strong></label> <span id="deleteOrderID"></span>
+                <label><strong>Customer:</strong> </label> <span id="deleteCustomer"></span>
+                <label><strong>Order Date:</strong> </label> <span id="deleteOrderDate"></span>
+                <label><strong>Status:</strong> </label> <span id="deleteStatus"></span>
+                <label><strong>Books:</strong> </label> <span id="deleteBooks"></span>
+                <label><strong>Total Price:</strong> </label> <span id="deleteTotalPrice"></span>
+            </fieldset>
+            <input class="btn" type="submit" value="Delete Order">
+            <input class="btn" type="button" value="Cancel" onClick="browseOrders()">
+        </form>
+    </div><!-- delete -->
+
+</body>
+
+</html>
