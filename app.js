@@ -1,11 +1,3 @@
-/*
-    Group 79
-	  Team Members: Varun Bhat, Evan Monroe
-    Project Title: : Online Bookstore Mangement System
-    File: app.js
-    Citations: Lots of code based off CS 340 starter code.
-*/
-
 const express = require("express");
 const bodyParser = require("body-parser");
 const db = require("./db-connector");
