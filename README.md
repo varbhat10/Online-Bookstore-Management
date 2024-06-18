@@ -3,6 +3,7 @@ My Online Bookstore Management System is a web based application designed to fac
 
 
 Here is how to use it!
-1.
-2.
-3.
+
+1. a
+2. b
+3. c
