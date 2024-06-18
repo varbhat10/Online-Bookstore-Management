@@ -1,11 +1,3 @@
-/*
-    Group 79
-	Team Members: Varun Bhat, Evan Monroe
-    Project Title: : Online Bookstore Management System
-    File: DML.sql
-    Citations: Adapted from DML Assignment
-*/
-
 -- Get list of books from title (search func)
 SELECT * FROM Books WHERE title LIKE CONCAT('%', :titleInput, '%');
 
