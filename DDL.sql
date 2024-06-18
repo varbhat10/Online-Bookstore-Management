@@ -1,11 +1,3 @@
-/*
-    Group 79
-	Team Members: Varun Bhat, Evan Monroe
-    Project Title: : Online Bookstore Mangement System
-    File: DDL.sql
-    Citations: Adapted from DDL Assignment
-*/
-
 SET FOREIGN_KEY_CHECKS = 0;
 SET AUTOCOMMIT = 0;
 
