@@ -1,0 +1,26 @@
+{
+  "name": "online-bookstore-management",
+  "version": "1.0.0",
+  "description": "My Online Bookstore Management System is a web based application designed to facilitate the management of a bookstore's inventory, customers, orders, and authors. The application allows administrators to perform CRUD operations on the bookstore's database. The system is implemented using Node.js for the backend and a combination of HTML, CSS, and JavaScript for the frontend.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/varbhat10/Online-Bookstore-Management.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/varbhat10/Online-Bookstore-Management/issues"
+  },
+  "homepage": "https://github.com/varbhat10/Online-Bookstore-Management#readme",
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "mysql": "^2.18.1"
+  }
+}

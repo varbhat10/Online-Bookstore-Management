@@ -1,5 +1,5 @@
 -- Get list of books from title (search func)
-SELECT * FROM Books WHERE title LIKE CONCAT('%', :titleInput, '%');
+SELECT * FROM Books WHERE title LIKE CONCAT('%', 'Harry Potter', '%');
 
 -- Grab details for specific book
 SELECT * FROM Books WHERE bookID = :bookID;
